@@ -80,8 +80,15 @@ command:prepare_build_offline() {
     docker run --name coreos_sdk_container_stage4 --privileged --net=host inaetics/coreos_sdk_stage3 ./chromite/bin/cros_sdk -- ./build_packages --fetchonly
 }
 
+#command:copy_modules_ebuild() {
+#    cp ./src/third_party/inaetics/linux_rt/coreos-modules-4.8.11-r2.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/.
+#}
+
 command:build_target_online() {
     docker run --privileged -v `pwd`:/tmp --net=host --name coreos_sdk_container_stage4 inaetics/coreos_sdk_stage3 ./src/third_party/inaetics/coreos_sdk.sh compile_online
+    #docker run --privileged -v `pwd`:/tmp --net=host --name coreos_sdk_container_test inaetics/coreos_sdk_stage3 /tmp/coreos_sdk.sh copy_modules_ebuild
+    #docker commit coreos_sdk_container_test inaetics/coreos_sdk_test
+    #docker run --privileged -v `pwd`:/tmp --net=host --name coreos_sdk_container_stage4 inaetics/coreos_sdk_test /tmp/coreos_sdk.sh compile_online
     docker commit coreos_sdk_container_stage4 inaetics/coreos_sdk_stage4
 }
 
@@ -95,13 +102,15 @@ command:build_image() {
 }
 
 command:build_kernel_module_dir() {
-    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp inaetics/coreos_sdk_stage5 ./src/third_party/inaetics/coreos_sdk.sh build_modules_dir
+#    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp inaetics/coreos_sdk_stage5 ./src/third_party/inaetics/coreos_sdk.sh build_modules_dir
+    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp inaetics/coreos_sdk_stage5 /tmp/coreos_sdk.sh build_modules_dir
 }
 
 #===============================================================================
 command:prepare_chroot() {
     echo "prepare_chroot"
-    ./chromite/bin/cros_sdk --sdk-version=1068.8.0 --create
+#    ./chromite/bin/cros_sdk --sdk-version=1068.8.0 --create
+    ./chromite/bin/cros_sdk --sdk-version=1248.4.0 --create
     ./chromite/bin/cros_sdk ./set_shared_user_password.sh core
     ./chromite/bin/cros_sdk -- bash -c "echo amd64-usr > .default_board"
 }
@@ -134,12 +143,23 @@ command:build_offline() {
 }
 
 
-command:download_sdk() {
+command:download_sdk_1068() {
     echo "prepare_sdk, downloads sdk environment"
     cp ./src/third_party/inaetics/linux_rt/patch-4.6.5-rt9.patch ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/files/4.6/.
     cp ./src/third_party/inaetics/linux_rt/coreos-sources-4.6.3.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/.
     cp ./src/third_party/inaetics/linux_rt/amd64_defconfig-4.6 ./src/third_party/coreos-overlay/sys-kernel/coreos-kernel/files/amd64_defconfig-4.6
     cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20160331.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-modules-4.8.11-r2.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/.
+    ./chromite/bin/cros_sdk ./setup_board 
+}
+command:download_sdk() {
+    echo "prepare_sdk, downloads sdk environment"
+    cp ./src/third_party/inaetics/linux_rt/patch-4.8.11-rt10.patch ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/files/4.8/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-sources-4.8.11-r2.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/.
+    cp ./src/third_party/inaetics/linux_rt/amd64_defconfig-4.8 ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/files/amd64_defconfig-4.8
+    cp ./src/third_party/inaetics/linux_rt/coreos-modules-4.8.11-r2.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-kernel.eclass ./src/third_party/coreos-overlay/eclass/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20160331-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
     ./chromite/bin/cros_sdk ./setup_board 
 }
 
@@ -156,13 +176,21 @@ command:build_modules_dir() {
     sudo cp chroot/build/amd64-usr/usr/src/coreos_linux.tgz /tmp/.
 }
 
-command:build_modules_dir_in_chroot() {
+command:build_modules_dir_in_chroot_1068() {
     cd /build/amd64-usr/usr/src/linux-4.6.3-coreos;
     sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.6 .; 
     sudo make olddefconfig; 
     sudo make modules_prepare; 
     cd ..
     sudo tar czf coreos_linux.tgz linux-4.6.3-coreos;
+}
+command:build_modules_dir_in_chroot() {
+    cd /build/amd64-usr/usr/src/linux-4.8.11-coreos-r2;
+    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.8 .; 
+    sudo make olddefconfig; 
+    sudo make modules_prepare; 
+    cd ..
+    sudo tar czf coreos_linux.tgz linux-4.8.11-coreos-r2;
 }
 
 FINAL_IMAGE="inaetics/coreos_sdk"

@@ -34,3 +34,22 @@ Bugs
 
 Note: the script creates a number of very large (at most 15GB) named docker containers.
       Remove these manually
+
+Updating to a new CoreOS release:
+1. The version number is in the Dockerfile and in the resources/coreos_sdk.sh
+2. Perform the steps until prepare_coreos_sdk
+3. Extract the new kernel config file and add the PREEMPT_RT settings
+4. Extract the ebuild files of coreos-sources and coreos-firmware from the coreos_container_stage1 image
+5. Download the rt patchset that is closest to the version used in CoreOS and rename it to the same version number as CoreOS has with the rt extension.
+6. Make the necessary changes in the ebuild files (version number and rt patch)
+
+
+Analysing the emerge environment
+1. Tests are done inside the chromite/cros_sdk environment
+   Adapt src/third_party/coreos-overlay/eclass/coreos-kernel.eclass
+   Add -rt10 to COREOS_SOURCE_VERSION but then also in 
+   coreos-overlay/sys-kernel/coreos-sources-rt2-rt10 is needed
+2. Involved are third-pary/portage/eclass/linux-info.eclass 
+                third-party/coreos-overlay/eclass/coreos-kernel.eclass
+   The ebuild and eclass files are not so much different from the originals but didn't create patches
+   Check the lines that contain -rt10 to find the real differences

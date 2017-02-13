@@ -24,7 +24,7 @@ RUN mkdir /home/coreos
 WORKDIR   /home/coreos 
 
 RUN git config --global core.email "develop@thales.com"; git config --global core.name "Developer"
-RUN /home/bin/repo init -u https://github.com/coreos/manifest.git --manifest-branch=build-1068 --manifest-name=release.xml
+RUN /home/bin/repo init -u https://github.com/coreos/manifest.git --manifest-branch=build-1248 --manifest-name=release.xml
 RUN /home/bin/repo sync
 
 RUN mkdir -p  /home/coreos/src/third_party/inaetics/linux_rt
