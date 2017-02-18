@@ -49,7 +49,7 @@ src_install() {
 	rm "build/.config.old" || die
 
 	# Install /lib/modules/${KV_FULL}/{build,source}
-	KV_FULL=${KV_FULL}-rt10
+#	KV_FULL=${KV_FULL}-rt10
 	install_build_source
 
 	# Not strictly required but this is where we used to install the config.
