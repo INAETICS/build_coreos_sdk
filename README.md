@@ -44,6 +44,10 @@ Updating to a new CoreOS release:
 6. Make the necessary changes in the ebuild files (version number and rt patch)
 
 
+Testing pxe boot with qemu (Used qemu 2.6.2-6.fc24):
+qemu-system-x86_64 -boot n -net user,tftp=`pwd`,bootfile=/pxelinux.0  -net nic -m 1024
+
+
 Analysing the emerge environment
 1. Tests are done inside the chromite/cros_sdk environment
    Adapt src/third_party/coreos-overlay/eclass/coreos-kernel.eclass

@@ -1,0 +1,7 @@
+default coreos
+prompt 1
+timeout 10
+
+label coreos
+    kernel coreos_production_pxe.vmlinuz 
+    append initrd=coreos_production_pxe_image.cpio.gz
