@@ -102,8 +102,8 @@ command:build_image() {
 }
 
 command:build_kernel_module_dir() {
-#    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp inaetics/coreos_sdk_stage5 ./src/third_party/inaetics/coreos_sdk.sh build_modules_dir
-    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp inaetics/coreos_sdk_stage5 /tmp/coreos_sdk.sh build_modules_dir
+    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp inaetics/coreos_sdk_stage5 ./src/third_party/inaetics/coreos_sdk.sh build_modules_dir
+#    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp inaetics/coreos_sdk_stage5 /tmp/coreos_sdk.sh build_modules_dir
 }
 
 #===============================================================================
@@ -171,7 +171,7 @@ command:get_images() {
 }
 
 command:build_modules_dir() {
-    sudo cp /tmp/coreos_sdk.sh ./src/third_party/inaetics/coreos_sdk.sh
+ #   sudo cp /tmp/coreos_sdk.sh ./src/third_party/inaetics/coreos_sdk.sh
     ./chromite/bin/cros_sdk ../third_party/inaetics/coreos_sdk.sh build_modules_dir_in_chroot
     sudo cp chroot/build/amd64-usr/usr/src/coreos_linux.tgz /tmp/.
 }
@@ -188,7 +188,9 @@ command:build_modules_dir_in_chroot() {
     cd /build/amd64-usr/usr/src/linux-4.8.11-coreos-r2;
     sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.8 .; 
     sudo make olddefconfig; 
-    sudo make modules_prepare; 
+    sudo make modules_prepare;
+    sudo make
+    sudo make clean 
     cd ..
     sudo tar czf coreos_linux.tgz linux-4.8.11-coreos-r2;
 }
