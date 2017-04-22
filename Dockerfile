@@ -1,4 +1,4 @@
-From fedora:latest
+From fedora:24
 Maintainer ThalesNetherlands
 
 RUN dnf install -y \
@@ -39,6 +39,8 @@ ADD resources/cros_sdk.py /home/coreos/chromite/scripts/cros_sdk.py
 # In docker the losetup command is not usable as is.
 # From github.com/iamyam/coreos-build/blob/master/build-within-gentoo-docker.md got the following patch
 ADD resources/grub_install.sh /home/coreos/src/scripts/build_library/grub_install.sh
+ADD resources/coreos-install /home/coreos/src/third_party/coreos-overlay/coreos-base/coreos-init/files/
+ADD resources/coreos-init-0.0.1-r137.ebuild /home/coreos/src/third_party/coreos-overlay/coreos-base/coreos-init/
 RUN sudo chmod +x /home/coreos/src/scripts/build_library/grub_install.sh
 # Add real-time linux patchset changes
 ADD resources/linux_rt/* /home/coreos/src/third_party/inaetics/linux_rt/
