@@ -24,13 +24,10 @@ RUN mkdir /home/coreos
 WORKDIR   /home/coreos 
 
 RUN git config --global core.email "develop@thales.com"; git config --global core.name "Developer"
-RUN /home/bin/repo init -u https://github.com/coreos/manifest.git --manifest-branch=build-1248 --manifest-name=release.xml
+RUN /home/bin/repo init -u https://github.com/coreos/manifest.git --manifest-branch=build-1298 --manifest-name=release.xml
 RUN /home/bin/repo sync
 
 RUN mkdir -p  /home/coreos/src/third_party/inaetics/linux_rt
-
-#RUN cd /home/coreos/src/third_party/inaetics/linux_rt; wget https://www.kernel.org/pub/linux/kernel/projects/rt/4.6/older/patch-4.6.5-rt9.patch.gz; gunzip patch-4.6.5-rt9.patch.gz
-#Note: The above patch needed an update in i915_gem_shrinker.c
 
 ADD resources/coreos_sdk.sh /home/coreos/src/third_party/inaetics
 # With Fedora24 as base image we run into an issue that was solved on the master branch of CoreOS
@@ -40,7 +37,7 @@ ADD resources/cros_sdk.py /home/coreos/chromite/scripts/cros_sdk.py
 # From github.com/iamyam/coreos-build/blob/master/build-within-gentoo-docker.md got the following patch
 ADD resources/grub_install.sh /home/coreos/src/scripts/build_library/grub_install.sh
 ADD resources/coreos-install /home/coreos/src/third_party/coreos-overlay/coreos-base/coreos-init/files/
-ADD resources/coreos-init-0.0.1-r137.ebuild /home/coreos/src/third_party/coreos-overlay/coreos-base/coreos-init/
+ADD resources/coreos-init-0.0.1-r139.ebuild /home/coreos/src/third_party/coreos-overlay/coreos-base/coreos-init/
 RUN sudo chmod +x /home/coreos/src/scripts/build_library/grub_install.sh
 # Add real-time linux patchset changes
 ADD resources/linux_rt/* /home/coreos/src/third_party/inaetics/linux_rt/

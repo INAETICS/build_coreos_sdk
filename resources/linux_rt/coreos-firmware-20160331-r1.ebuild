@@ -81,7 +81,7 @@ src_unpack() {
 }
 
 src_prepare() {
-	KV_FULL="$KV_FULL-rt10"
+	KV_FULL="$KV_FULL-rt16"
 	local kernel_mods="${ROOT}/lib/modules/${KV_FULL}"
 
 	# If any firmware is missing warn but don't raise a fuss. Missing

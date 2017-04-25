@@ -2,13 +2,12 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
-COREOS_SOURCE_REVISION="-r2"
+COREOS_SOURCE_REVISION="-r1"
 inherit coreos-kernel savedconfig
 
 DESCRIPTION="CoreOS Linux kernel modules"
 KEYWORDS="amd64 arm64"
 RDEPEND="!<sys-kernel/coreos-kernel-4.6.3-r1"
-
 
 src_prepare() {
 	restore_config build/.config
@@ -49,12 +48,10 @@ src_install() {
 	rm "build/.config.old" || die
 
 	# Install /lib/modules/${KV_FULL}/{build,source}
-#	KV_FULL=${KV_FULL}-rt10
 	install_build_source
 
 	# Not strictly required but this is where we used to install the config.
 	dodir "/usr/boot"
-#	KV_FULL=${KV_FULL}-rt10
 	local build="lib/modules/${KV_FULL}/build"
 	dosym "../${build}/.config" "/usr/boot/config-${KV_FULL}"
 	dosym "../${build}/.config" "/usr/boot/config"
