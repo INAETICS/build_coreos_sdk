@@ -210,8 +210,8 @@ coreos-kernel_pkg_setup() {
 	echo "coreos-kernel_pkg_setup kv_full was " ${KV_FULL}
 	echo "coreos-kernel_pkg_setup output_dir war " ${OUTPUT_DIR}
 	echo "coreos-kernel_pkg_setup kv_out_dir was " ${KV_OUT_DIR}
-	OUTPUT_DIR="/lib/modules/${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}${KV_EXTRA}-rt16/build"
-	KV_FULL=${KV_FULL}-rt16
+	OUTPUT_DIR="/lib/modules/${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}${KV_EXTRA}-rt20/build"
+	KV_FULL=${KV_FULL}-rt20
 	KV_OUT_DIR=/build/amd64-usr/${OUTPUT_DIR}
 	echo "coreos-kernel_pkg_setup output dir new " ${OUTPUT_DIR}
 	echo "coreos-kernel_pkg_setup kv_full new " ${KV_FULL}

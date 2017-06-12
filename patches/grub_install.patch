@@ -1,0 +1,92 @@
+--- grub_install.org	2017-06-08 20:11:09.377746884 +0200
++++ grub_install.sh	2017-06-08 20:20:22.427732828 +0200
+@@ -88,7 +88,9 @@
+ # using a single loop device with partitions there is no such cleanup.
+ # That's the story of why this script has all this goo for loop and mount.
+ ESP_DIR=
+-LOOP_DEV=
++#LOOP_DEV=
++LOOP_DEV0=
++LOOP_DEV1=
+ 
+ cleanup() {
+     if [[ -d "${ESP_DIR}" ]]; then
+@@ -97,9 +99,14 @@
+         fi
+         rm -rf "${ESP_DIR}"
+     fi
+-    if [[ -b "${LOOP_DEV}" ]]; then
+-        sudo losetup --detach "${LOOP_DEV}"
++    # Be careful: original patch does it differently, see iamyaw coreos-build/build-with-gentoo-docker.md
++    if [[ -b "${LOOP_DEV0}" ]]; then
++        sudo losetup --detach "${LOOP_DEV1}"
+     fi
++    if [[ -b "${LOOP_DEV1}" ]]; then
++        sudo losetup --detach "${LOOP_DEV0}"
++    fi
++
+     if [[ -n "${GRUB_TEMP_DIR}" && -e "${GRUB_TEMP_DIR}" ]]; then
+       rm -r "${GRUB_TEMP_DIR}"
+     fi
+@@ -107,28 +114,17 @@
+ trap cleanup EXIT
+ 
+ info "Installing GRUB ${FLAGS_target} in ${FLAGS_disk_image##*/}"
+-LOOP_DEV=$(sudo losetup --find --show --partscan "${FLAGS_disk_image}")
+-ESP_DIR=$(mktemp --directory)
++LOOP_DEV0=$(sudo losetup --find --show "${FLAGS_disk_image}")
++echo "Loopdev0: ${LOOP_DEV0}"
++losetup -f
++PART1_OFFSET=`expr $(partx -gn 1 -o START "${FLAGS_disk_image}") \* 512`
++# Not sure if the -o flag is needed
++LOOP_DEV1=$(sudo losetup --find --show -o ${PART1_OFFSET} ${LOOP_DEV0})
++echo "Loopdev1: ${LOOP_DEV1}"
+ 
+-# work around slow/buggy udev, make sure the node is there before mounting
+-if [[ ! -b "${LOOP_DEV}p1" ]]; then
+-    # sleep a little just in case udev is ok but just not finished yet
+-    warn "loopback device node ${LOOP_DEV}p1 missing, waiting on udev..."
+-    sleep 0.5
+-    for (( i=0; i<5; i++ )); do
+-        if [[ -b "${LOOP_DEV}p1" ]]; then
+-            break
+-        fi
+-        warn "looback device node still ${LOOP_DEV}p1 missing, reprobing..."
+-        sudo blockdev --rereadpt ${LOOP_DEV}
+-        sleep 0.5
+-    done
+-    if [[ ! -b "${LOOP_DEV}p1" ]]; then
+-        failboat "${LOOP_DEV}p1 where art thou? udev has forsaken us!"
+-    fi
+-fi
++ESP_DIR=$(mktemp --directory)
+ 
+-sudo mount -t vfat "${LOOP_DEV}p1" "${ESP_DIR}"
++sudo mount -t vfat "${LOOP_DEV1}" "${ESP_DIR}"
+ sudo mkdir -p "${ESP_DIR}/${GRUB_DIR}"
+ 
+ info "Compressing modules in ${GRUB_DIR}"
+@@ -141,7 +137,9 @@
+ # Include a small initial config in the core image to search for the ESP
+ # by filesystem ID in case the platform doesn't provide the boot disk.
+ # The existing $root value is given as a hint so it is searched first.
+-ESP_FSID=$(sudo grub-probe -t fs_uuid -d "${LOOP_DEV}p1")
++
++ESP_FSID=$(sudo grub-probe -t fs_uuid -d "${LOOP_DEV1}")
++
+ sudo_clobber "${ESP_DIR}/${GRUB_DIR}/load.cfg" <<EOF
+ search.fs_uuid ${ESP_FSID} root \$root
+ set prefix=(memdisk)
+@@ -186,10 +184,10 @@
+         info "Installing MBR and the BIOS Boot partition."
+         sudo cp "${GRUB_SRC}/boot.img" "${ESP_DIR}/${GRUB_DIR}"
+         sudo grub-bios-setup --device-map=/dev/null \
+-            --directory="${ESP_DIR}/${GRUB_DIR}" "${LOOP_DEV}"
++            --directory="${ESP_DIR}/${GRUB_DIR}" "${LOOP_DEV0}"
+         # boot.img gets manipulated by grub-bios-setup so it alone isn't
+         # sufficient to restore the MBR boot code if it gets corrupted.
+-        sudo dd bs=448 count=1 if="${LOOP_DEV}" \
++        sudo dd bs=448 count=1 if="${LOOP_DEV0}" \
+             of="${ESP_DIR}/${GRUB_DIR}/mbr.bin"
+         ;;
+     x86_64-efi)

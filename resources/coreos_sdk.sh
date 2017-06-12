@@ -110,7 +110,8 @@ command:prepare_chroot() {
     echo "prepare_chroot"
 #    ./chromite/bin/cros_sdk --sdk-version=1068.8.0 --create
 #    ./chromite/bin/cros_sdk --sdk-version=1248.4.0 --create
-    ./chromite/bin/cros_sdk --sdk-version=1298.7.0 --create
+#    ./chromite/bin/cros_sdk --sdk-version=1298.7.0 --create
+    ./chromite/bin/cros_sdk --sdk-version=1353.7.0 --create
     ./chromite/bin/cros_sdk ./set_shared_user_password.sh core
     ./chromite/bin/cros_sdk -- bash -c "echo amd64-usr > .default_board"
 }
@@ -163,12 +164,22 @@ command:download_sdk_1248() {
     cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20160331-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
     ./chromite/bin/cros_sdk ./setup_board 
 }
-command:download_sdk() {
+command:download_sdk_1298() {
     echo "prepare_sdk, downloads sdk environment"
     cp ./src/third_party/inaetics/linux_rt/patch-4.9.20-rt16.patch ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/files/4.9/.
     cp ./src/third_party/inaetics/linux_rt/coreos-sources-4.9.16-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/.
     cp ./src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/files/amd64_defconfig-4.9
     cp ./src/third_party/inaetics/linux_rt/coreos-modules-4.9.16-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-kernel.eclass ./src/third_party/coreos-overlay/eclass/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20160331-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
+    ./chromite/bin/cros_sdk ./setup_board 
+}
+command:download_sdk() {
+    echo "prepare_sdk, downloads sdk environment"
+    cp ./src/third_party/inaetics/linux_rt/z000-patch-4.9.24-rt20.patch ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/files/4.9/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-sources-4.9.24.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/.
+    cp ./src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/files/amd64_defconfig-4.9
+#    cp ./src/third_party/inaetics/linux_rt/coreos-modules-4.9.16-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/.
     cp ./src/third_party/inaetics/linux_rt/coreos-kernel.eclass ./src/third_party/coreos-overlay/eclass/.
     cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20160331-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
     ./chromite/bin/cros_sdk ./setup_board 
@@ -195,6 +206,11 @@ command:build_modules_dir() {
     ./chromite/bin/cros_sdk ../third_party/inaetics/coreos_sdk.sh build_modules_dir_in_chroot
     sudo cp chroot/build/amd64-usr/usr/src/coreos_linux.tgz /tmp/.
 }
+command:build_modules_dir_in_chroot_1298() {
+    sudo cp /tmp/coreos_sdk.sh ./src/third_party/inaetics/coreos_sdk.sh
+    ./chromite/bin/cros_sdk ../third_party/inaetics/coreos_sdk.sh build_modules_dir_in_chroot
+    sudo cp chroot/build/amd64-usr/usr/src/coreos_linux.tgz /tmp/.
+}
 
 command:build_modules_dir_in_chroot_1068() {
     cd /build/amd64-usr/usr/src/linux-4.6.3-coreos;
@@ -216,7 +232,7 @@ command:build_modules_dir_in_chroot_1248() {
     cd ..
     sudo tar czf coreos_linux.tgz linux-4.8.11-coreos-r2;
 }
-command:build_modules_dir_in_chroot() {
+command:build_modules_dir_in_chroot_1298() {
     cd /build/amd64-usr/usr/src/linux-4.9.16-coreos-r1;
     sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 .; 
     sudo make olddefconfig; 
@@ -225,6 +241,16 @@ command:build_modules_dir_in_chroot() {
     sudo make clean 
     cd ..
     sudo tar czf coreos_linux.tgz linux-4.9.16-coreos-r1;
+}
+command:build_modules_dir_in_chroot() {
+    cd /build/amd64-usr/usr/src/linux-4.9.24-coreos;
+    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 .; 
+    sudo make olddefconfig; 
+    sudo make modules_prepare;
+    sudo make
+    sudo make clean 
+    cd ..
+    sudo tar czf coreos_linux.tgz linux-4.9.24-coreos;
 }
 
 FINAL_IMAGE="inaetics/coreos_sdk"

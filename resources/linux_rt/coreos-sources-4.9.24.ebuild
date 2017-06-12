@@ -19,10 +19,8 @@ PATCH_DIR="${FILESDIR}/${KV_MAJOR}.${KV_MINOR}"
 # applied _after_ a potential patch-${KV}.patch file, present when building a
 # patchlevel revision.  We mustn't apply our patches first, it fails when the
 # local patches overlap with the upstream patch.
-
-# in $PATCH_DIR: ls -1 | sed -e 's/^/\t${PATCH_DIR}\//g' -e 's/$/ \\/g'
 UNIPATCH_LIST="
-        ${PATCH_DIR}/patch-4.9.20-rt16.patch \
+        ${PATCH_DIR}/z000-patch-4.9.24-rt20.patch \
 	${PATCH_DIR}/z0001-Add-secure_modules-call.patch \
 	${PATCH_DIR}/z0002-PCI-Lock-down-BAR-access-when-module-security-is-ena.patch \
 	${PATCH_DIR}/z0003-x86-Lock-down-IO-port-access-when-module-security-is.patch \
@@ -41,6 +39,4 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0016-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-w.patch \
 	${PATCH_DIR}/z0017-perf-x86-intel-rapl-Make-package-handling-more-robus.patch \
 	${PATCH_DIR}/z0018-perf-x86-intel-uncore-Make-package-handling-more-rob.patch \
-	${PATCH_DIR}/z0019-xfrm_user-validate-XFRM_MSG_NEWAE-XFRMA_REPLAY_ESN_V.patch \
-	${PATCH_DIR}/z0020-xfrm_user-validate-XFRM_MSG_NEWAE-incoming-ESN-size-.patch \
 "

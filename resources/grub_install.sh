@@ -22,6 +22,10 @@ DEFINE_string disk_image "" \
   "The disk image containing the EFI System partition."
 DEFINE_boolean verity ${FLAGS_FALSE} \
   "Indicates that boot commands should enable dm-verity."
+DEFINE_string copy_efi_grub "" \
+  "Copy the EFI GRUB image to the specified path."
+DEFINE_string copy_shim "" \
+  "Copy the shim image to the specified path."
 
 # Parse flags
 FLAGS "$@" || exit 1
@@ -39,7 +43,7 @@ GRUB_DIR="coreos/grub/${FLAGS_target}"
 GRUB_SRC="/usr/lib/grub/${FLAGS_target}"
 
 # Modules required to boot a standard CoreOS configuration
-CORE_MODULES=( normal search test fat part_gpt search_fs_uuid gzio search_part_label terminal gptprio configfile memdisk tar echo )
+CORE_MODULES=( normal search test fat part_gpt search_fs_uuid gzio search_part_label terminal gptprio configfile memdisk tar echo read )
 
 # Name of the core image, depends on target
 CORE_NAME=
@@ -54,14 +58,14 @@ case "${FLAGS_target}" in
         CORE_NAME="core.img"
         ;;
     x86_64-efi)
-	CORE_MODULES+=( serial linuxefi efi_gop getenv smbios efinet verify http )
+	CORE_MODULES+=( serial linuxefi efi_gop getenv smbios efinet verify http tftp )
         CORE_NAME="core.efi"
         ;;
     x86_64-xen)
         CORE_NAME="core.elf"
         ;;
     arm64-efi)
-        CORE_MODULES+=( serial efi_gop getenv smbios efinet verify http )
+        CORE_MODULES+=( serial linux efi_gop getenv smbios efinet verify http tftp )
         CORE_NAME="core.efi"
         BOARD_GRUB=1
         ;;
@@ -85,15 +89,6 @@ fi
 # That's the story of why this script has all this goo for loop and mount.
 ESP_DIR=
 #LOOP_DEV=
-#GB added additional loop devices
-#set +e
-#sudo mknod /dev/loop0 b 7 0 || true
-#sudo mknod /dev/loop1 b 7 1 || true
-#sudo mknod /dev/loop2 b 7 2 || true
-#sudo mknod /dev/loop3 b 7 3 || true
-#sudo mknod /dev/loop4 b 7 4 || true
-#sudo mknod /dev/loop5 b 7 5 || true
-#set -e
 LOOP_DEV0=
 LOOP_DEV1=
 
@@ -104,9 +99,6 @@ cleanup() {
         fi
         rm -rf "${ESP_DIR}"
     fi
-#    if [[ -b "${LOOP_DEV}" ]]; then
-#        sudo losetup --detach "${LOOP_DEV}"
-#    fi
     # Be careful: original patch does it differently, see iamyaw coreos-build/build-with-gentoo-docker.md
     if [[ -b "${LOOP_DEV0}" ]]; then
         sudo losetup --detach "${LOOP_DEV1}"
@@ -114,6 +106,7 @@ cleanup() {
     if [[ -b "${LOOP_DEV1}" ]]; then
         sudo losetup --detach "${LOOP_DEV0}"
     fi
+
     if [[ -n "${GRUB_TEMP_DIR}" && -e "${GRUB_TEMP_DIR}" ]]; then
       rm -r "${GRUB_TEMP_DIR}"
     fi
@@ -121,7 +114,6 @@ cleanup() {
 trap cleanup EXIT
 
 info "Installing GRUB ${FLAGS_target} in ${FLAGS_disk_image##*/}"
-#LOOP_DEV=$(sudo losetup --find --show --partscan "${FLAGS_disk_image}")
 LOOP_DEV0=$(sudo losetup --find --show "${FLAGS_disk_image}")
 echo "Loopdev0: ${LOOP_DEV0}"
 losetup -f
@@ -132,25 +124,6 @@ echo "Loopdev1: ${LOOP_DEV1}"
 
 ESP_DIR=$(mktemp --directory)
 
-# work around slow/buggy udev, make sure the node is there before mounting
-#if [[ ! -b "${LOOP_DEV}p1" ]]; then
-#    # sleep a little just in case udev is ok but just not finished yet
-#    warn "loopback device node ${LOOP_DEV}p1 missing, waiting on udev..."
-#    sleep 0.5
-#    for (( i=0; i<5; i++ )); do
-#        if [[ -b "${LOOP_DEV}p1" ]]; then
-#            break
-#        fi
-#        warn "looback device node still ${LOOP_DEV}p1 missing, reprobing..."
-#        sudo blockdev --rereadpt ${LOOP_DEV}
-#        sleep 0.5
-#    done
-#    if [[ ! -b "${LOOP_DEV}p1" ]]; then
-#        failboat "${LOOP_DEV}p1 where art thou? udev has forsaken us!"
-#    fi
-#fi
-
-#sudo mount -t vfat "${LOOP_DEV}p1" "${ESP_DIR}"
 sudo mount -t vfat "${LOOP_DEV1}" "${ESP_DIR}"
 sudo mkdir -p "${ESP_DIR}/${GRUB_DIR}"
 
@@ -164,7 +137,7 @@ info "Generating ${GRUB_DIR}/load.cfg"
 # Include a small initial config in the core image to search for the ESP
 # by filesystem ID in case the platform doesn't provide the boot disk.
 # The existing $root value is given as a hint so it is searched first.
-#ESP_FSID=$(sudo grub-probe -t fs_uuid -d "${LOOP_DEV}p1")
+
 ESP_FSID=$(sudo grub-probe -t fs_uuid -d "${LOOP_DEV1}")
 
 sudo_clobber "${ESP_DIR}/${GRUB_DIR}/load.cfg" <<EOF
@@ -210,14 +183,10 @@ case "${FLAGS_target}" in
     i386-pc)
         info "Installing MBR and the BIOS Boot partition."
         sudo cp "${GRUB_SRC}/boot.img" "${ESP_DIR}/${GRUB_DIR}"
-#        sudo grub-bios-setup --device-map=/dev/null \
-#            --directory="${ESP_DIR}/${GRUB_DIR}" "${LOOP_DEV}"
         sudo grub-bios-setup --device-map=/dev/null \
             --directory="${ESP_DIR}/${GRUB_DIR}" "${LOOP_DEV0}"
         # boot.img gets manipulated by grub-bios-setup so it alone isn't
         # sufficient to restore the MBR boot code if it gets corrupted.
-#        sudo dd bs=448 count=1 if="${LOOP_DEV}" \
-#            of="${ESP_DIR}/${GRUB_DIR}/mbr.bin"
         sudo dd bs=448 count=1 if="${LOOP_DEV0}" \
             of="${ESP_DIR}/${GRUB_DIR}/mbr.bin"
         ;;
@@ -237,8 +206,19 @@ case "${FLAGS_target}" in
                  "/usr/lib/shim/shim.efi"
         else
             sudo cp "${ESP_DIR}/${GRUB_DIR}/${CORE_NAME}" \
+                "${ESP_DIR}/EFI/boot/grub.efi"
+            sudo cp "/usr/lib/shim/shim.efi" \
                 "${ESP_DIR}/EFI/boot/bootx64.efi"
 	fi
+        # copying from vfat so ignore permissions
+        if [[ -n "${FLAGS_copy_efi_grub}" ]]; then
+            cp --no-preserve=mode "${ESP_DIR}/EFI/boot/grub.efi" \
+                "${FLAGS_copy_efi_grub}"
+        fi
+        if [[ -n "${FLAGS_copy_shim}" ]]; then
+            cp --no-preserve=mode "${ESP_DIR}/EFI/boot/bootx64.efi" \
+                "${FLAGS_copy_shim}"
+        fi
         ;;
     x86_64-xen)
         info "Installing default x86_64 Xen bootloader."
@@ -254,6 +234,11 @@ case "${FLAGS_target}" in
         #FIXME(andrejro): shim not ported to aarch64
         sudo cp "${ESP_DIR}/${GRUB_DIR}/${CORE_NAME}" \
             "${ESP_DIR}/EFI/boot/bootaa64.efi"
+        if [[ -n "${FLAGS_copy_efi_grub}" ]]; then
+            # copying from vfat so ignore permissions
+            cp --no-preserve=mode "${ESP_DIR}/EFI/boot/bootaa64.efi" \
+                "${FLAGS_copy_efi_grub}"
+        fi
         ;;
 esac
 
