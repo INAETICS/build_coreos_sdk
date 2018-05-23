@@ -98,11 +98,11 @@ command:build_image() {
     # Needs at least 3 loop back devices
     docker run --privileged --name coreos_sdk_container_stage5 inaetics/coreos_sdk_stage4 ./src/third_party/inaetics/coreos_sdk.sh build_offline
     docker commit coreos_sdk_container_stage5 inaetics/coreos_sdk_stage5
-    docker run -v `pwd`:/tmp inaetics/coreos_sdk_stage5 ./src/third_party/inaetics/coreos_sdk.sh get_images
+    docker run -v `pwd`:/tmp:Z inaetics/coreos_sdk_stage5 ./src/third_party/inaetics/coreos_sdk.sh get_images
 }
 
 command:build_kernel_module_dir() {
-    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp inaetics/coreos_sdk_stage5 ./src/third_party/inaetics/coreos_sdk.sh build_modules_dir
+    docker run --privileged --name coreos_sdk_container_modules -v `pwd`:/tmp:Z inaetics/coreos_sdk_stage5 ./src/third_party/inaetics/coreos_sdk.sh build_modules_dir
 }
 
 #===============================================================================
@@ -214,7 +214,7 @@ command:build_modules_dir_in_chroot_1298() {
 
 command:build_modules_dir_in_chroot_1068() {
     cd /build/amd64-usr/usr/src/linux-4.6.3-coreos;
-    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.6 .; 
+    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.6 .config; 
     sudo make olddefconfig; 
     sudo make modules_prepare; 
     sudo make
@@ -224,7 +224,7 @@ command:build_modules_dir_in_chroot_1068() {
 }
 command:build_modules_dir_in_chroot_1248() {
     cd /build/amd64-usr/usr/src/linux-4.8.11-coreos-r2;
-    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.8 .; 
+    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.8 .config; 
     sudo make olddefconfig; 
     sudo make modules_prepare;
     sudo make
@@ -234,7 +234,7 @@ command:build_modules_dir_in_chroot_1248() {
 }
 command:build_modules_dir_in_chroot_1298() {
     cd /build/amd64-usr/usr/src/linux-4.9.16-coreos-r1;
-    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 .; 
+    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 .config; 
     sudo make olddefconfig; 
     sudo make modules_prepare;
     sudo make
@@ -244,7 +244,7 @@ command:build_modules_dir_in_chroot_1298() {
 }
 command:build_modules_dir_in_chroot() {
     cd /build/amd64-usr/usr/src/linux-4.9.24-coreos;
-    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 .; 
+    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 .config; 
     sudo make olddefconfig; 
     sudo make modules_prepare;
     sudo make
