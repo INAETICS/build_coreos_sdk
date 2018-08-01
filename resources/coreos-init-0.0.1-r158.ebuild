@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="df715172be8839541254f66c93fc0a6f1932b1f1"
+	CROS_WORKON_COMMIT="19ecf75a44b5c985e4f3cb312caa19f776277cb9"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -29,10 +29,8 @@ REQUIRED_USE="symlink-usr"
 # Daemons we enable here must installed during build/install in addition to
 # during runtime so the systemd unit enable step works.
 DEPEND="
-	app-emulation/docker
 	net-misc/openssh
 	net-nds/rpcbind
-	!<dev-db/etcd-0.0.1-r6
 	!coreos-base/oem-service
 	test? ( dev-lang/python:2.7 )
 	"
@@ -46,15 +44,9 @@ RDEPEND="${DEPEND}
 
 src_install() {
 	emake DESTDIR="${D}" install
-        # https://devmanual.gentoo.org/function-reference/install-functions/
-        #insinto "/usr/bin/"
-        #sudo chmod +x ${FILESDIR}/coreos-install
-        #doins "${FILESDIR}/coreos-install"
-        dobin ${FILESDIR}/coreos-install
 
 	# Enable some sockets that aren't enabled by their own ebuilds.
 	systemd_enable_service sockets.target sshd.socket
-	systemd_enable_service sockets.target docker.socket
 
 	# Enable some services that aren't enabled elsewhere.
 	systemd_enable_service rpcbind.target rpcbind.service

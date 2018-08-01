@@ -111,7 +111,8 @@ command:prepare_chroot() {
 #    ./chromite/bin/cros_sdk --sdk-version=1068.8.0 --create
 #    ./chromite/bin/cros_sdk --sdk-version=1248.4.0 --create
 #    ./chromite/bin/cros_sdk --sdk-version=1298.7.0 --create
-    ./chromite/bin/cros_sdk --sdk-version=1353.7.0 --create
+#    ./chromite/bin/cros_sdk --sdk-version=1353.7.0 --create
+    ./chromite/bin/cros_sdk --sdk-version=1745.3 --create
     ./chromite/bin/cros_sdk ./set_shared_user_password.sh core
     ./chromite/bin/cros_sdk -- bash -c "echo amd64-usr > .default_board"
 }
@@ -140,7 +141,8 @@ command:build_offline() {
     sudo mknod /dev/loop4 b 7 4 || true
     sudo mknod /dev/loop5 b 7 5 || true
     ./chromite/bin/cros_sdk -- ./build_image prod --group production
-    ./chromite/bin/cros_sdk -- ./image_to_vm.sh --prod_image --format pxe
+    #./chromite/bin/cros_sdk -- ./image_to_vm.sh --prod_image --format pxe
+    ./chromite/bin/cros_sdk -- ./image_to_vm.sh --format pxe --board amd64-usr
     ./chromite/bin/cros_sdk ../third_party/inaetics/coreos_sdk.sh build_disk_image
 }
 
@@ -174,7 +176,8 @@ command:download_sdk_1298() {
     cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20160331-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
     ./chromite/bin/cros_sdk ./setup_board 
 }
-command:download_sdk() {
+
+command:download_sdk_1353() {
     echo "prepare_sdk, downloads sdk environment"
     cp ./src/third_party/inaetics/linux_rt/z000-patch-4.9.24-rt20.patch ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/files/4.9/.
     cp ./src/third_party/inaetics/linux_rt/coreos-sources-4.9.24.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/.
@@ -182,6 +185,16 @@ command:download_sdk() {
 #    cp ./src/third_party/inaetics/linux_rt/coreos-modules-4.9.16-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/.
     cp ./src/third_party/inaetics/linux_rt/coreos-kernel.eclass ./src/third_party/coreos-overlay/eclass/.
     cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20160331-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
+    ./chromite/bin/cros_sdk ./setup_board 
+}
+
+command:download_sdk() {
+    echo "prepare_sdk, downloads sdk environment"
+    cp ./src/third_party/inaetics/linux_rt/z0000-patch-4.14.40-rt30.patch ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/files/4.14/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-sources-4.14.42.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/.
+    cp ./src/third_party/inaetics/linux_rt/amd64_defconfig-4.14 ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/files/amd64_defconfig-4.14
+    cp ./src/third_party/inaetics/linux_rt/coreos-kernel.eclass ./src/third_party/coreos-overlay/eclass/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20180103-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
     ./chromite/bin/cros_sdk ./setup_board 
 }
 
@@ -242,7 +255,7 @@ command:build_modules_dir_in_chroot_1298() {
     cd ..
     sudo tar czf coreos_linux.tgz linux-4.9.16-coreos-r1;
 }
-command:build_modules_dir_in_chroot() {
+command:build_modules_dir_in_chroot_1353() {
     cd /build/amd64-usr/usr/src/linux-4.9.24-coreos;
     sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.9 .config; 
     sudo make olddefconfig; 
@@ -252,6 +265,17 @@ command:build_modules_dir_in_chroot() {
     cd ..
     sudo tar czf coreos_linux.tgz linux-4.9.24-coreos;
 }
+command:build_modules_dir_in_chroot() {
+    cd /build/amd64-usr/usr/src/linux-4.14.42-coreos;
+    sudo cp /mnt/host/source/src/third_party/inaetics/linux_rt/amd64_defconfig-4.14 .config; 
+    sudo make olddefconfig; 
+    sudo make modules_prepare;
+    sudo make
+    sudo make clean 
+    cd ..
+    sudo tar czf coreos_linux.tgz linux-4.14.42-coreos;
+}
+
 
 FINAL_IMAGE="inaetics/coreos_sdk"
 BUILDER_UID="${BUILDER_UID:-$( id -u )}"

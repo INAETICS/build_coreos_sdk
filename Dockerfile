@@ -24,7 +24,7 @@ RUN mkdir /home/coreos
 WORKDIR   /home/coreos 
 
 RUN git config --global core.email "develop@thales.com"; git config --global core.name "Developer"
-RUN /home/bin/repo init -u https://github.com/coreos/manifest.git --manifest-branch=build-1353 --manifest-name=release.xml
+RUN /home/bin/repo init -u https://github.com/coreos/manifest.git --manifest-branch=build-1745 --manifest-name=release.xml
 RUN /home/bin/repo sync
 
 RUN mkdir -p  /home/coreos/src/third_party/inaetics/linux_rt
@@ -37,7 +37,7 @@ ADD resources/cros_sdk.py /home/coreos/chromite/scripts/cros_sdk.py
 # From github.com/iamyam/coreos-build/blob/master/build-within-gentoo-docker.md got the following patch
 ADD resources/grub_install.sh /home/coreos/src/scripts/build_library/grub_install.sh
 ADD resources/coreos-install /home/coreos/src/third_party/coreos-overlay/coreos-base/coreos-init/files/
-ADD resources/coreos-init-0.0.1-r139.ebuild /home/coreos/src/third_party/coreos-overlay/coreos-base/coreos-init/
+ADD resources/coreos-init-0.0.1-r158.ebuild /home/coreos/src/third_party/coreos-overlay/coreos-base/coreos-init/
 RUN sudo chmod +x /home/coreos/src/scripts/build_library/grub_install.sh
 # Add real-time linux patchset changes
 ADD resources/linux_rt/* /home/coreos/src/third_party/inaetics/linux_rt/
