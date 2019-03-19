@@ -194,6 +194,7 @@ command:download_sdk() {
     cp ./src/third_party/inaetics/linux_rt/coreos-sources-4.14.42.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-sources/.
     cp ./src/third_party/inaetics/linux_rt/amd64_defconfig-4.14 ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/files/amd64_defconfig-4.14
     cp ./src/third_party/inaetics/linux_rt/coreos-kernel.eclass ./src/third_party/coreos-overlay/eclass/.
+    cp ./src/third_party/inaetics/linux_rt/coreos-modules-4.14.48-r2.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-modules/.
     cp ./src/third_party/inaetics/linux_rt/coreos-firmware-20180103-r1.ebuild ./src/third_party/coreos-overlay/sys-kernel/coreos-firmware/.
     ./chromite/bin/cros_sdk ./setup_board 
 }

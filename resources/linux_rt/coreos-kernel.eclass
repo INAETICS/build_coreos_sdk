@@ -175,7 +175,8 @@ install_build_source() {
 	local kernel_arch=$(tc-arch-kernel)
 
 	# remove the broken symlinks referencing $ROOT
-	rm "${D}/usr/lib/modules/${KV_FULL}"/{build,source} || die
+#	rm "${D}/usr/lib/modules/${KV_FULL}"/{build,source} || die
+        rm "${D}/usr/lib/modules/4.14.48-coreos-r2"/{build,source} || die
 
 	# Install a stripped source for out-of-tree module builds (Debian-derived)
 	{
